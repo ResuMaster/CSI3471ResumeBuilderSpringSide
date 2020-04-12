@@ -1,6 +1,7 @@
 package to.us.resume_builder.spring.controller;
 
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseEntity.BodyBuilder;
 
@@ -17,5 +18,9 @@ public abstract class BasicController {
 	 */
 	protected BodyBuilder getOkResponse() {
 		return ResponseEntity.ok().headers(new HttpHeaders());
+	}
+
+	protected BodyBuilder getInternalServerErrorResponse(String errorMessage) {
+		return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).headers(new HttpHeaders()).header("error", errorMessage);
 	}
 }
