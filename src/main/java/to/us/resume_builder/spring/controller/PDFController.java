@@ -17,7 +17,7 @@ public class PDFController extends BasicController {
 	private static final Logger LOG = Logger.getLogger(PDFController.class.getName());
 
 	@PostMapping("/pdf")
-	public ResponseEntity<InputStreamResource> postPdfUrl(@RequestParam(name = "latex") String latex, @RequestParam(name = "url") boolean url) {
+	public ResponseEntity<InputStreamResource> postPdf(@RequestParam(name = "latex") String latex, @RequestParam(name = "url") boolean url) {
 		LOG.info(latex);
 		Path pdf = Path.of("./", "resume.pdf");
 		InputStreamResource rsc;
