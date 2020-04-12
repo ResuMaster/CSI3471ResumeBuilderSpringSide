@@ -16,17 +16,9 @@ import to.us.resume_builder.ResumeExporter;
 public class PDFController extends BasicController {
 	private static final Logger LOG = Logger.getLogger(PDFController.class.getName());
 
-	@PostMapping(name = "/pdf/url", produces = MediaType.APPLICATION_JSON_VALUE)
-	public ResponseEntity<InputStreamResource> postPdfUrl(@RequestParam(name = "latex") String latex) {
-		return makePdf(latex, true);
-	}
-
-	@PostMapping(name = "/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-	public ResponseEntity<InputStreamResource> postPdf(@RequestParam(name = "latex") String latex) {
-		return makePdf(latex, false);
-	}
-
-	private ResponseEntity<InputStreamResource> makePdf(String latex, boolean url) {
+	@PostMapping("/pdf")
+	public ResponseEntity<InputStreamResource> postPdfUrl(@RequestParam(name = "latex") String latex, @RequestParam(name = "url") boolean url) {
+		LOG.info(latex);
 		Path pdf = Path.of("./", "resume.pdf");
 		InputStreamResource rsc;
 		MediaType mediaType;
@@ -35,6 +27,7 @@ public class PDFController extends BasicController {
 				LOG.warning("Export failed");
 				return ResponseEntity.status(500).build();
 			}
+			LOG.info("requesting url: " + url);
 			if (url) {
 				LOG.info("Uploading pdf to file.io");
 				String response = ResumeExporter.uploadPDF(pdf);

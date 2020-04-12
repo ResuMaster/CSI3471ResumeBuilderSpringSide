@@ -1,7 +1,5 @@
 package to.us.resume_builder;
 
-import to.us.resume_builder.spring.controller.PDFController;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -29,7 +27,7 @@ public class ResumeExporter {
             p.destroy();
             throw new TimeoutException();
         }
-        return Files.readString(pdf);
+        return Files.readString(Path.of("./fileio.log"));
     }
 
     public static boolean export(Path exportLocation, String latex) throws IOException {
