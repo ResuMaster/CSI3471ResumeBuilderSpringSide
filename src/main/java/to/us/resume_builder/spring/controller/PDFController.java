@@ -25,7 +25,7 @@ public class PDFController extends BasicController {
 		try {
 			if (!ResumeExporter.export(pdf, latex)) {
 				LOG.warning("Export failed");
-				return ResponseEntity.status(500).build();
+				return getInternalServerErrorResponse("Export failed").build();
 			}
 			LOG.info("requesting url: " + url);
 			if (url) {
