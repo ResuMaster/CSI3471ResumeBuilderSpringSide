@@ -1,70 +1,52 @@
 package to.us.resume_builder.spring.controller;
 
+import java.io.*;
+import java.nio.file.*;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
 
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import to.us.resume_builder.spring.data.pdf.PdfDBCHandle;
-import to.us.resume_builder.spring.data.pdf.abstract_dbc.PdfDBC;
-import to.us.resume_builder.spring.data.user.ResumeUserDBCHandle;
-import to.us.resume_builder.spring.data.user.abstract_dbc.DeleteResult;
-import to.us.resume_builder.spring.data.user.abstract_dbc.ResumeUserDBC;
+import to.us.resume_builder.ResumeExporter;
 
 @RestController
 public class PDFController extends BasicController {
-	private static final Logger LOG = Logger.getLogger(ResumeUserController.class.getName());
+	private static final Logger LOG = Logger.getLogger(PDFController.class.getName());
 
-	// TODO autowire
-	private PdfDBC dbc;
-
-	@GetMapping(name = "/pdf", produces = MediaType.APPLICATION_PDF_VALUE)
-	public ResponseEntity<InputStreamResource> getPdf(@RequestParam(name = "user", required = true) String user,
-			@RequestParam(name = "pdfID", required = true) long pdfID) {
-		var pdf = dbc.getPDF(user, pdfID);
-
-		// If the PDF doesn't exist, then return a bad request
-		if (pdf == null)
-			return ResponseEntity.notFound().build();
-
-		// Return the pdf
-		return getOkResponse().contentType(MediaType.APPLICATION_PDF).body(new InputStreamResource(pdf));
-	}
-
-	@PutMapping(name = "/pdf")
-	public ResponseEntity<Long> putPdf(@RequestParam(name = "user", required = true) String user,
-			@RequestParam(name = "userID", required = true) long userID,
-			@RequestParam(name = "pdf", required = true) InputStreamResource pdf) {
-		// If the user doesn't exist, respond false
-		if (!ResumeUserDBCHandle.getUserDBC().getUserValid(user, userID))
-			return ResponseEntity.badRequest().build();
-
-		// Store
-		Long l = PdfDBCHandle.getPdfDBC().addPdf(user, pdf);
-
-		return getOkResponse().body(l);
-	}
-
-	@DeleteMapping(name = "/pdf")
-	public ResponseEntity<Void> deletePdf(@RequestParam(name = "user", required = true) String user,
-			@RequestParam(name = "userID", required = true) long userID,
-			@RequestParam(name = "pdfID", required = true) long pdfID) {
-		// If the user doesn't exist, respond false
-		ResumeUserDBC dbc = ResumeUserDBCHandle.getUserDBC();
-		if (!dbc.getUserValid(user, userID))
-			return ResponseEntity.badRequest().build();
-
-		// Remove if possible
-		var result = this.dbc.deletePdfFromDB(user, pdfID);
-		if (result == DeleteResult.SUCCESS)
-			return getOkResponse().build();
-		else
-			return ResponseEntity.badRequest().build();
+	@PostMapping("/pdf")
+	public ResponseEntity<InputStreamResource> postPdf(@RequestParam(name = "latex") String latex, @RequestParam(name = "url") boolean url) {
+		LOG.info(latex);
+		Path pdf = Path.of("./", "resume.pdf");
+		InputStreamResource rsc;
+		MediaType mediaType;
+		try {
+			if (!ResumeExporter.export(pdf, latex)) {
+				LOG.warning("Export failed");
+				return getInternalServerErrorResponse("Export failed").build();
+			}
+			LOG.info("requesting url: " + url);
+			if (url) {
+				LOG.info("Uploading pdf to file.io");
+				String response = ResumeExporter.uploadPDF(pdf);
+				rsc = new InputStreamResource(new ByteArrayInputStream(response.getBytes()));
+				mediaType = MediaType.APPLICATION_JSON;
+			} else {
+				rsc = new InputStreamResource(new BufferedInputStream(new FileInputStream(String.valueOf(pdf))));
+				mediaType = MediaType.APPLICATION_PDF;
+			}
+		} catch (FileNotFoundException e) {
+			LOG.warning("could not find " + pdf.toString() + " - " + e.getMessage());
+			return getInternalServerErrorResponse("internal PDF file not found").build();
+		} catch (InterruptedException | TimeoutException e) {
+			LOG.warning("file.io upload failed - " + e.getMessage());
+			return getInternalServerErrorResponse("file.io upload failed").build();
+		} catch (IOException e) {
+			LOG.warning("export failure -> " + e.getMessage());
+			return getInternalServerErrorResponse("export failed").build();
+		}
+		return getOkResponse().contentType(mediaType).body(rsc);
 	}
 }
