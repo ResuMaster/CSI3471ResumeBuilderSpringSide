@@ -3,6 +3,7 @@ package to.us.resume_builder.spring.controller;
 import java.io.*;
 import java.nio.file.*;
 import java.util.concurrent.TimeoutException;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 
 import org.springframework.core.io.InputStreamResource;
@@ -60,7 +61,7 @@ public class PDFController extends BasicController {
 				mediaType = MediaType.APPLICATION_JSON;
 			} else {
 				// Give the PDF in the response
-				in = new ByteArrayInputStream(String.valueOf(pdf).getBytes());
+				in = new ByteArrayInputStream(Files.readAllBytes(pdf));
 				mediaType = MediaType.APPLICATION_PDF;
 			}
 		} catch (FileNotFoundException e) {
@@ -73,7 +74,7 @@ public class PDFController extends BasicController {
 			LOG.warning("file.io upload timed out - " + e.getMessage());
 			return requestTimeout("file.io upload timed out").build();
 		} catch (IOException e) {
-			LOG.warning("caught IOException - " + e.getMessage());
+			LOG.logp(Level.WARNING, getClass().getName(), "postPdf", "IOException", e);
 			return internalServerError("internal file I/O error").build();
 		}
 
@@ -81,8 +82,7 @@ public class PDFController extends BasicController {
 		try {
 			Files.deleteIfExists(pdf.toAbsolutePath());
 		} catch (IOException e) {
-			LOG.warning("could not delete pdf - " + pdf.toString());
-			return internalServerError("could not clean up resource").build();
+			LOG.warning("could not delete " + pdf.toString() + " - " + e);
 		}
 
 		rsc = new InputStreamResource(new BufferedInputStream(in));
