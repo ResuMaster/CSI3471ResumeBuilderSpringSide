@@ -31,14 +31,14 @@ public class ResumeUserController extends BasicController {
 	/**
 	 * Endpoint for adding the user to the provided DB
 	 * 
-	 * @param newHash The hash for the new user to add
+	 * @param name The name for the new user to add
 	 * @return The ID of the newly-created user. This value acts as a special
 	 *         password for the user; it must be kept hidden by the client program.
 	 */
 	@PutMapping("/user")
 	public ResponseEntity<Long> addUser(@RequestParam(name = "name", required = true) String name) {
 		try {
-			var result = getOkResponse().body(dbc.addUserToDB(name));
+			var result = ok().body(dbc.addUserToDB(name));
 			return result;
 		} catch (UserAlreadyExistsException e) {
 			logError("User already existed in database", "addUser", e);
@@ -54,7 +54,7 @@ public class ResumeUserController extends BasicController {
 	 */
 	@GetMapping("/user")
 	public ResponseEntity<Boolean> hasUser(@RequestParam(name = "name", required = true) String name) {
-		return getOkResponse().body(dbc.getUserExists(name));
+		return ok().body(dbc.getUserExists(name));
 	}
 
 	/**
@@ -67,7 +67,7 @@ public class ResumeUserController extends BasicController {
 	@DeleteMapping("/user")
 	public ResponseEntity<DeleteResult> deleteUser(@RequestParam(name = "name", required = true) String name,
 			@RequestParam(name = "id", required = true) long id) {
-		return getOkResponse().body(dbc.deleteUserFromDB(name, id));
+		return ok().body(dbc.deleteUserFromDB(name, id));
 	}
 
 	/**
