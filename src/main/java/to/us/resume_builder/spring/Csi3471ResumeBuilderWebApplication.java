@@ -42,6 +42,7 @@ public class Csi3471ResumeBuilderWebApplication {
 	 * @param ctx The context of the application to kill
 	 */
 	private static void awaitKill(ApplicationContext ctx) {
+		@SuppressWarnings("resource")
 		Scanner s = new Scanner(new InputStreamReader(System.in));
 		System.out.printf("Running application %1$s%n", Csi3471ResumeBuilderWebApplication.class.getName());
 

@@ -1,32 +1,23 @@
 package to.us.resume_builder.dbc;
 
+import java.io.BufferedOutputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.Scanner;
 
 public class Test {
-	private static final String QUIT = "quit";
+	private static final String LATEX = "\\documentclass{article}\r\n" + "\\begin{document}\r\n" + "Hello World\r\n"
+			+ "\\end{document}";
 
 	public static void main(String[] args) throws IOException, InterruptedException {
-		// TODO create a new test for the final endpoint
-//        ResumeUserDBC dbc = new ResumeUserDBC();
+		PDFFacade facade = PDFFacade.getPDFHandle();
 
-		// Handle input
-		@SuppressWarnings("resource")
-		Scanner s = new Scanner(new InputStreamReader(System.in));
-		String line;
-		while (true) {
-			System.out.println("Enter a command:");
-			line = s.nextLine();
-
-			if (line.equalsIgnoreCase("GET")) {
-				line = s.nextLine();
-//                System.out.println(dbc.hasUser(line));
-			} else if (line.equalsIgnoreCase("PUT")) {
-				line = s.nextLine();
-//                System.out.println(dbc.addUser(line));
-			} else if (line.equalsIgnoreCase(QUIT))
-				break;
+		// Test read
+		try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("./hello.pdf"))) {
+			var v = facade.getPDF(LATEX);
+			bos.write(v);
+			var v2 = facade.uploadPDF(LATEX);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 		}
 	}
 }

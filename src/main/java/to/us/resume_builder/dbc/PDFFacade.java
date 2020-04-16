@@ -2,15 +2,18 @@ package to.us.resume_builder.dbc;
 
 import java.io.IOException;
 import java.net.http.HttpResponse;
-import java.nio.file.Path;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 
+import to.us.resume_builder.dbc.fileio_response.FileIOResponse;
+import to.us.resume_builder.dbc.fileio_response.FileIOResponseParser;
 import to.us.resume_builder.dbc.request.FailedRequestException;
 import to.us.resume_builder.dbc.request.impl.PDFRequest;
 
 public class PDFFacade {
 
 	/** The status code indicating the PDF compile request succeeded */
-	private static final int DOWNLOAD_SUCCESS = 201;
+	private static final int DOWNLOAD_SUCCESS = 200;
 
 	/** The status code indicating the PDF upload request succeeded */
 	private static final int UPLOAD_SUCCESS = 200;
@@ -32,31 +35,34 @@ public class PDFFacade {
 	 *                                occurred server-side.
 	 */
 	public byte[] getPDF(String latex) throws IOException, InterruptedException, FailedRequestException {
-
 		// Get and vet response
-		var resp = req.sendRequest("latex", latex, "url", "true");
+		var resp = req.sendRequest("latex", latex, "url", "false");
 		catchError(resp, DOWNLOAD_SUCCESS);
 
-		//
+		// Return file
+		return resp.body().readAllBytes();
 	}
 
 	/**
 	 * Compiles the given LaTeX string into a PDF, which is uploaded to file.io.
 	 * 
 	 * @param latex The LaTeX string to compile.
-	 * @return The address the file was saved to.
+	 * @return file.io's response, or null if the response was corrupted.
 	 * @throws InterruptedException   If the operation is interrupted
 	 * @throws IOException            If an I/O exception occurs in sending or
 	 *                                receiving.
 	 * @throws FailedRequestException If the response indicates that an error
 	 *                                occurred server-side.
 	 */
-	public Path uploadPDF(String latex) throws IOException, InterruptedException, FailedRequestException {
-
+	public FileIOResponse uploadPDF(String latex) throws IOException, InterruptedException, FailedRequestException {
 		// Get and vet response
-		var resp = req.sendRequest("latex", latex, "url", "false");
+		var resp = req.sendRequest("latex", latex, "url", "true");
 		catchError(resp, UPLOAD_SUCCESS);
 
+		// Send back response. Split up into multiple lines for readability.
+		byte[] result = resp.body().readAllBytes();
+		String txtResp = StandardCharsets.UTF_8.decode(ByteBuffer.wrap(result)).toString();
+		return FileIOResponseParser.getManager().parseResponse(txtResp);
 	}
 
 	/**
