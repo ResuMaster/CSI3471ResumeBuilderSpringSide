@@ -77,17 +77,26 @@ public class ResumeExporter {
         if (!Files.exists(latexPath.getParent())) {
             // Generate the temp folder
             Files.createDirectory(latexPath.getParent());
+            LOG.info("Temporary folder did not exist, so it was created.");
         }
         // Generate the LaTeX file
         Files.writeString(latexPath, latex, StandardCharsets.UTF_8, StandardOpenOption.CREATE);
+        LOG.info("LaTeX file created.");
+
         // Generate the PDF
         boolean status = compileResumePDF(latexPath);
         // Save the pdf to the specified location
         if (status) {
-            Files.move(latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf"), exportLocation, StandardCopyOption.REPLACE_EXISTING);
+            LOG.info("PDF compilation successful.");
+            Path finalLocation = latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf");
+            LOG.info("Moving generated PDF to " + finalLocation.toAbsolutePath().toString() + "...");
+            Files.move(finalLocation, exportLocation, StandardCopyOption.REPLACE_EXISTING);
         } else {
+            LOG.warning("PDF compilation failed.");
+            LOG.warning("Deleting temporary PDF, if it exists...");
             Files.deleteIfExists(latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf"));
         }
+        LOG.info("Export process complete.");
         return status;
     }
 
@@ -100,6 +109,7 @@ public class ResumeExporter {
      * @throws IOException Thrown if an I/O error occurs.
      */
     private static boolean compileResumePDF(Path filePath) throws IOException {
+        LOG.info("Beginning resume compilation...");
         // Temporary artifacts
         final String[] ARTIFACTS_TO_DELETE = { "aux", "log", "tex", "log" };
         boolean status = true;
@@ -113,11 +123,14 @@ public class ResumeExporter {
             // TODO: add dedicated log file
             builder.redirectOutput(new File("./" + name + ".log"));
             builder.redirectError(new File("./" + name + ".log"));
+            LOG.info("PDF compilation log can be found at " + Path.of("./export.log").toAbsolutePath().toString());
 
             // Run the process
             Process p = builder.start();
+            LOG.info("Attempting to run process \"" + builder.command() + "\"...");
             if (!p.waitFor(ApplicationConfiguration.getInstance().getLong("export.timeout"), TimeUnit.SECONDS)) {
                 p.destroy();
+                LOG.warning("PDF compilation timed out.");
                 status = false;
             }
 
@@ -126,15 +139,18 @@ public class ResumeExporter {
                 if (f.isFile() && Arrays.stream(ARTIFACTS_TO_DELETE).anyMatch(e -> f.getName().endsWith(e))) {
                     if (f.getName().endsWith("log")) {
                         // Don't delete log if something went wrong
+                        LOG.info("Attempting to delete artifact \"" + f.getAbsolutePath() + "\", if it exists.");
                         if (status) {
                             Files.deleteIfExists(f.toPath());
                         }
                     } else {
+                        LOG.info("Attempting to delete artifact \"" + f.getAbsolutePath() + "\", if it exists.");
                         Files.deleteIfExists(f.toPath());
                     }
                 }
             }
         } catch (InterruptedException e) {
+            LOG.warning("Compilation process was interrupted. Exiting compilation.");
             status = false;
         }
 
