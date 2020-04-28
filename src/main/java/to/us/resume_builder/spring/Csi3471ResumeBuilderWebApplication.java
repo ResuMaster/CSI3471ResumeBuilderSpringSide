@@ -50,7 +50,7 @@ public class Csi3471ResumeBuilderWebApplication {
 
         // Block waiting for the server to be shut down
         String inputLine;
-        while (keepAlive || ((inputLine = s.nextLine()) != null && !s.nextLine().equals(SHUTDOWN_CODE))) {
+        while (keepAlive || ((inputLine = s.nextLine()) != null && !inputLine.equals(SHUTDOWN_CODE))) {
             System.out.println("WRONG!");
         }
         SpringApplication.exit(ctx, () -> 0);
