@@ -31,7 +31,7 @@ public class Csi3471ResumeBuilderWebApplication {
 	@Bean
 	public CommandLineRunner commandLineRunner(ApplicationContext ctx) {
 		return args -> {
-			awaitKill(ctx);
+			//awaitKill(ctx);
 		};
 	}
 
