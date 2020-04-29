@@ -43,8 +43,9 @@ public class ResumeExporter {
         // Set up log files
         File out = new File("./" + name + ".log");
         File err = new File("./" + name + "_error.log");
-        builder.redirectOutput(out);
-        builder.redirectError(err);
+//        builder.redirectOutput(out);
+//        builder.redirectError(err);
+        builder.inheritIO();
 
         // Run the command
         Process p = builder.start();
@@ -131,8 +132,9 @@ public class ResumeExporter {
             ProcessBuilder builder = new ProcessBuilder("pdflatex", "\"" + filePath.toAbsolutePath().toString() + "\"");
             builder.directory(filePath.getParent().toFile());
             // TODO: add dedicated log file
-            builder.redirectOutput(log);
-            builder.redirectError(log);
+//            builder.redirectOutput(log);
+//            builder.redirectError(log);
+            builder.inheritIO();
 
             LOG.info("PDF compilation log can be found at " + log.getAbsolutePath());
 
