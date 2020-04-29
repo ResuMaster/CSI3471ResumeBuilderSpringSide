@@ -96,7 +96,7 @@ public class ResumeExporter {
         // Generate the PDF
         boolean status = compileResumePDF(latexPath);
         // Save the pdf to the specified location
-        if (status) {
+        if (status && Files.exists(exportLocation)) {
             LOG.info("PDF compilation successful.");
             Path finalLocation = latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf");
             LOG.info("Moving generated PDF to " + finalLocation.toAbsolutePath().toString() + "...");
