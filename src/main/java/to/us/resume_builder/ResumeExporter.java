@@ -2,6 +2,8 @@ package to.us.resume_builder;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -12,6 +14,8 @@ import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.logging.Logger;
+
+import to.us.resume_builder.dbc.request.PostRequest;
 
 /**
  * Contains utility functions for exporting resume to PDF and uploading to
@@ -33,34 +37,10 @@ public class ResumeExporter {
      * @throws TimeoutException The process took too long
      */
     public static String uploadPDF(Path pdf) throws IOException, InterruptedException, TimeoutException {
-        String name = pdf.toString().split("\\.pdf")[0];
-
         // Create the command
-        ProcessBuilder builder = new ProcessBuilder("curl", "-F", "\"file=@" + pdf.toString() + "\"", "https://file.io");
-        builder.directory(pdf.getParent().toFile());
-
-        // Set up log files
-        File out = new File("./" + name + ".log");
-        File err = new File("./" + name + "_error.log");
-        builder.redirectOutput(out);
-        builder.redirectError(err);
-
-        // Run the command
-        Process p = builder.start();
-        if (!p.waitFor(ApplicationConfiguration.getInstance().getLong("export.timeout"), TimeUnit.SECONDS)) {
-            LOG.warning("file.io upload timed out, check " + name + "_error.log");
-            Files.deleteIfExists(out.toPath());
-            p.destroy();
-            throw new TimeoutException();
-        }
-
-        String response = Files.readString(out.toPath());
-
-        // Clean up logs
-        Files.deleteIfExists(out.toPath());
-        Files.deleteIfExists(err.toPath());
-
-        return response;
+        PostRequest pr = new PostRequest("/", pdf.toString());
+        HttpResponse<InputStream> result = pr.sendRequest("expires", "2w");
+        return new String(result.body().readAllBytes(), StandardCharsets.UTF_8);
     }
 
     /**
@@ -73,7 +53,8 @@ public class ResumeExporter {
      *                     process.
      */
     public static boolean export(Path exportLocation, String latex) throws IOException {
-        Path latexPath = Path.of(ApplicationConfiguration.getInstance().getString("export.tempLocation"), MiscUtils.randomAlphanumericString(16) + ".tex");
+        Path latexPath = Path.of(ApplicationConfiguration.getInstance().getString("export.tempLocation"),
+                MiscUtils.randomAlphanumericString(16) + ".tex");
         if (!Files.exists(latexPath.getParent())) {
             // Generate the temp folder
             Files.createDirectory(latexPath.getParent());

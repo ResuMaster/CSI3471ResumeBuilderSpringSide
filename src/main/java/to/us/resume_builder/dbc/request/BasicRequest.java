@@ -32,7 +32,7 @@ public abstract class BasicRequest<T> {
     /** Initializes the client and address to query. */
     static {
         CLIENT = HttpClient.newBuilder().version(HttpClient.Version.HTTP_2).build();
-        SITE = ApplicationConfiguration.getInstance().getString("request.url");
+        SITE = ApplicationConfiguration.getInstance().getString("export.fileio");
     }
 
     /** Charset to send requests using */
@@ -105,7 +105,7 @@ public abstract class BasicRequest<T> {
             }
 
             // If there are more, add the variable separator
-            if (i + 1 < arguments.length)
+            if (i + 2 < arguments.length)
                 sb.append(SEPARATOR);
         }
 
