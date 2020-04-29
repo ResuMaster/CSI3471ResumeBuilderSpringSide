@@ -27,34 +27,48 @@ public class ResumeExporter {
      * Uploads the specified PDF to file.io, and returns their response.
      *
      * @param pdf The PDF to upload to file.io
+     *
      * @return The response from file.io
-     * @throws IOException Resulting from ProcessBuilder or Files
+     * @throws IOException          Resulting from ProcessBuilder or Files
      * @throws InterruptedException The process' execution ended early
-     * @throws TimeoutException The process took too long
+     * @throws TimeoutException     The process took too long
      */
     public static String uploadPDF(Path pdf) throws IOException, InterruptedException, TimeoutException {
+        LOG.info("Does PDF exist? " + (Files.exists(Path.of(pdf.toAbsolutePath().toString())) ? "YES" : "NO"));
+
+        pdf.toFile().setReadable(true);
         String name = pdf.toString().split("\\.pdf")[0];
 
         // Create the command
-        ProcessBuilder builder = new ProcessBuilder("curl", "-F", "\"file=@" + pdf.toString() + "\"", "https://file.io");
+        ProcessBuilder builder = new ProcessBuilder("curl", "-v", "-F", "\"file=@" + pdf.toAbsolutePath().toString() + "\"", "https://file.io");
         builder.directory(pdf.getParent().toFile());
+        LOG.info("Attempting to run command " + builder.command());
 
         // Set up log files
         File out = new File("./" + name + ".log");
         File err = new File("./" + name + "_error.log");
         builder.redirectOutput(out);
         builder.redirectError(err);
+//        builder.inheritIO();
 
         // Run the command
         Process p = builder.start();
         if (!p.waitFor(ApplicationConfiguration.getInstance().getLong("export.timeout"), TimeUnit.SECONDS)) {
             LOG.warning("file.io upload timed out, check " + name + "_error.log");
+            if (out.exists())
+                System.out.println(">>> file.io process stdout: \n" + Files.readString(out.toPath()));
+            if (err.exists())
+                System.out.println(">>> file.io process stderr: \n" + Files.readString(err.toPath()));
             Files.deleteIfExists(out.toPath());
             p.destroy();
             throw new TimeoutException();
         }
 
         String response = Files.readString(out.toPath());
+        if (out.exists())
+            System.out.println(">>> file.io process stdout: \n" + response);
+        if (err.exists())
+            System.out.println(">>> file.io process stderr: \n" + Files.readString(err.toPath()));
 
         // Clean up logs
         Files.deleteIfExists(out.toPath());
@@ -85,16 +99,18 @@ public class ResumeExporter {
 
         // Generate the PDF
         boolean status = compileResumePDF(latexPath);
+        Path finalLocation = latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf");
         // Save the pdf to the specified location
-        if (status) {
+        if (status && Files.exists(finalLocation)) {
             LOG.info("PDF compilation successful.");
-            Path finalLocation = latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf");
             LOG.info("Moving generated PDF to " + finalLocation.toAbsolutePath().toString() + "...");
             Files.move(finalLocation, exportLocation, StandardCopyOption.REPLACE_EXISTING);
+            status = true;
         } else {
             LOG.warning("PDF compilation failed.");
             LOG.warning("Deleting temporary PDF, if it exists...");
             Files.deleteIfExists(latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf"));
+            status = false;
         }
         LOG.info("Export process complete.");
         return status;
@@ -115,15 +131,18 @@ public class ResumeExporter {
         boolean status = true;
 
         String name = filePath.toString().split(".pdf")[0];
+        File log = new File("./" + name + ".log");
 
         // Attempt to generate the resume
         try {
             ProcessBuilder builder = new ProcessBuilder("pdflatex", "\"" + filePath.toAbsolutePath().toString() + "\"");
             builder.directory(filePath.getParent().toFile());
             // TODO: add dedicated log file
-            builder.redirectOutput(new File("./" + name + ".log"));
-            builder.redirectError(new File("./" + name + ".log"));
-            LOG.info("PDF compilation log can be found at " + Path.of("./export.log").toAbsolutePath().toString());
+//            builder.redirectOutput(log);
+//            builder.redirectError(log);
+            builder.inheritIO();
+
+            LOG.info("PDF compilation log can be found at " + log.getAbsolutePath());
 
             // Run the process
             Process p = builder.start();
@@ -152,6 +171,10 @@ public class ResumeExporter {
         } catch (InterruptedException e) {
             LOG.warning("Compilation process was interrupted. Exiting compilation.");
             status = false;
+        } finally {
+            if (log.exists()) {
+                System.out.println(">>> pdflatex process stdout/stderr: \n" + Files.readString(log.toPath()));
+            }
         }
 
         return status;
