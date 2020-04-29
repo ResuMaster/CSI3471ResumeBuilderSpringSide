@@ -39,7 +39,7 @@ public class PDFService {
             LOG.info("requesting url: " + url);
             if (url) {
                 // Upload PDF to file.io, return response
-                LOG.info("Uploading pdf to file.io");
+                LOG.info("Uploading pdf to transfer.sh");
                 String response = ResumeExporter.uploadPDF(pdf);
                 in = new ByteArrayInputStream(response.getBytes());
                 mediaType = MediaType.APPLICATION_JSON;
@@ -49,10 +49,10 @@ public class PDFService {
                 mediaType = MediaType.APPLICATION_PDF;
             }
         } catch (InterruptedException e) {
-            LOG.warning("file.io upload failed - " + e.getMessage());
+            LOG.warning("transfer.sh upload failed - " + e.getMessage());
             return FACTORY.createServiceUnavailable("file.io upload failed").build();
         } catch (TimeoutException e) {
-            LOG.warning("file.io upload timed out - " + e.getMessage());
+            LOG.warning("transfer.sh upload timed out - " + e.getMessage());
             return FACTORY.createRequestTimeout("file.io upload timed out").build();
         } catch (IOException e) {
             LOG.logp(Level.WARNING, getClass().getName(), "postPdf", "IOException", e);
