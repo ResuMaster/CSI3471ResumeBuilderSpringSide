@@ -34,10 +34,11 @@ public class ResumeExporter {
      * @throws TimeoutException     The process took too long
      */
     public static String uploadPDF(Path pdf) throws IOException, InterruptedException, TimeoutException {
+        pdf.toFile().setReadable(true);
         String name = pdf.toString().split("\\.pdf")[0];
 
         // Create the command
-        ProcessBuilder builder = new ProcessBuilder("curl", "-F", "\"file=@" + pdf.toString() + "\"", "https://file.io");
+        ProcessBuilder builder = new ProcessBuilder("curl", "-F", "\"file=@" + pdf.toAbsolutePath().toString() + "\"", "https://file.io");
         builder.directory(pdf.getParent().toFile());
 
         // Set up log files
