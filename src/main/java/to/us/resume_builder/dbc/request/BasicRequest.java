@@ -1,13 +1,17 @@
 package to.us.resume_builder.dbc.request;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URLEncoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.time.Duration;
 import java.util.Arrays;
+
+import to.us.resume_builder.ApplicationConfiguration;
 
 /**
  * Basic framework for connecting to our database. Handles a single request.
@@ -28,9 +32,11 @@ public abstract class BasicRequest<T> {
     /** Initializes the client and address to query. */
     static {
         CLIENT = HttpClient.newBuilder().version(HttpClient.Version.HTTP_2).build();
-        SITE = "http://localhost:8080";
+        SITE = ApplicationConfiguration.getInstance().getString("request.url");
     }
 
+    /** Charset to send requests using */
+    protected static final String CHARSET = "UTF-8";
     /** Separator for elements in a query string */
     protected static final String SEPARATOR = "&";
     /** Assignment for parameters in a query string */
@@ -60,7 +66,6 @@ public abstract class BasicRequest<T> {
     /**
      * Creates and sends the specific request this class handles.
      * 
-     * @param value
      * @param arguments
      * @return The http response from the request this class handles
      * @throws InterruptedException If the operation is interrupted
@@ -80,7 +85,7 @@ public abstract class BasicRequest<T> {
      * @param arguments The arguments, in a Name1, Val1, ..., NameN, ValN format.
      * @return The query string encapsulating the arguments list
      */
-    protected String getArguments(String... arguments) {
+    protected final String getArguments(String... arguments) {
         StringBuilder sb = new StringBuilder("");
 
         // Assume my user didn't read the manual, protect from making a bad request.
@@ -90,9 +95,14 @@ public abstract class BasicRequest<T> {
 
         for (int i = 0; i < arguments.length; i += 2) {
             // varName=varVal
-            sb.append(arguments[i]);
-            sb.append(ASSIGN);
-            sb.append(arguments[i + 1]);
+            try {
+                sb.append(URLEncoder.encode(arguments[i], CHARSET));
+                sb.append(ASSIGN);
+                sb.append(URLEncoder.encode(arguments[i + 1], CHARSET));
+            } catch (UnsupportedEncodingException e) {
+                // Should not happen, UTF-8 is standard
+                e.printStackTrace();
+            }
 
             // If there are more, add the variable separator
             if (i + 1 < arguments.length)
@@ -116,7 +126,7 @@ public abstract class BasicRequest<T> {
     /**
      * Gets the URI for the request.
      * 
-     * @param The arguments, in a Name1, Val1, ..., NameN, ValN format.
+     * @param arguments in a Name1, Val1, ..., NameN, ValN format.
      * @return The URI for this request.
      */
     protected abstract URI getURI(String... arguments);
