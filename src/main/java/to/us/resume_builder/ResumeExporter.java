@@ -34,6 +34,8 @@ public class ResumeExporter {
      * @throws TimeoutException     The process took too long
      */
     public static String uploadPDF(Path pdf) throws IOException, InterruptedException, TimeoutException {
+        LOG.info("Does PDF exist? " + (Files.exists(Path.of(pdf.toAbsolutePath().toString())) ? "YES" : "NO"));
+
         pdf.toFile().setReadable(true);
         String name = pdf.toString().split("\\.pdf")[0];
 
