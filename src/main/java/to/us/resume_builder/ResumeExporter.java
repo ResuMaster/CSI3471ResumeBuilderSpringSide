@@ -40,6 +40,7 @@ public class ResumeExporter {
         // Create the command
         ProcessBuilder builder = new ProcessBuilder("curl", "-F", "\"file=@" + pdf.toAbsolutePath().toString() + "\"", "https://file.io");
         builder.directory(pdf.getParent().toFile());
+        LOG.info("Attempting to run command " + builder.toString());
 
         // Set up log files
         File out = new File("./" + name + ".log");
