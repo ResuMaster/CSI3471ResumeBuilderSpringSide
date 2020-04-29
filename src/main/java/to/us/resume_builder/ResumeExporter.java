@@ -43,8 +43,8 @@ public class ResumeExporter {
         // Set up log files
         File out = new File("./" + name + ".log");
         File err = new File("./" + name + "_error.log");
-//        builder.redirectOutput(out);
-//        builder.redirectError(err);
+        builder.redirectOutput(out);
+        builder.redirectError(err);
         builder.inheritIO();
 
         // Run the command
