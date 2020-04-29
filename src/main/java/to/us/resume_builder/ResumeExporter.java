@@ -101,10 +101,12 @@ public class ResumeExporter {
             LOG.info("PDF compilation successful.");
             LOG.info("Moving generated PDF to " + finalLocation.toAbsolutePath().toString() + "...");
             Files.move(finalLocation, exportLocation, StandardCopyOption.REPLACE_EXISTING);
+            status = true;
         } else {
             LOG.warning("PDF compilation failed.");
             LOG.warning("Deleting temporary PDF, if it exists...");
             Files.deleteIfExists(latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf"));
+            status = false;
         }
         LOG.info("Export process complete.");
         return status;
