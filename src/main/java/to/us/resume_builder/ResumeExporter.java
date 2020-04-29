@@ -40,10 +40,11 @@ public class ResumeExporter {
         builder.directory(pdf.getParent().toFile());
 
         // Set up log files
-        File out = new File("./" + name + ".log");
-        File err = new File("./" + name + "_error.log");
-        builder.redirectOutput(out);
-        builder.redirectError(err);
+//        File out = new File("./" + name + ".log");
+//        File err = new File("./" + name + "_error.log");
+//        builder.redirectOutput(out);
+//        builder.redirectError(err);
+        builder.inheritIO();
 
         // Run the command
         Process p = builder.start();
