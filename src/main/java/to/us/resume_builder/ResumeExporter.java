@@ -45,7 +45,7 @@ public class ResumeExporter {
         File err = new File("./" + name + "_error.log");
         builder.redirectOutput(out);
         builder.redirectError(err);
-        builder.inheritIO();
+//        builder.inheritIO();
 
         // Run the command
         Process p = builder.start();
@@ -95,10 +95,10 @@ public class ResumeExporter {
 
         // Generate the PDF
         boolean status = compileResumePDF(latexPath);
+        Path finalLocation = latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf");
         // Save the pdf to the specified location
-        if (status && Files.exists(exportLocation)) {
+        if (status && Files.exists(finalLocation)) {
             LOG.info("PDF compilation successful.");
-            Path finalLocation = latexPath.resolveSibling(latexPath.getFileName().toString().split("\\.")[0] + ".pdf");
             LOG.info("Moving generated PDF to " + finalLocation.toAbsolutePath().toString() + "...");
             Files.move(finalLocation, exportLocation, StandardCopyOption.REPLACE_EXISTING);
         } else {
