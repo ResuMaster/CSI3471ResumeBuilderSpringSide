@@ -83,7 +83,7 @@ public class PostRequest extends BasicRequest<InputStream> {
 
             // Get a UUID
             UUID qquuid = UUID.randomUUID();
-            bldr.append(boundary).append("Content-Disposition: form-data; name=\"qquuid\"").append(ln + ln)
+            bldr.append(boundary).append("Content-Disposition:" + ln + "form-data; name=\"qquuid\"").append(ln + ln)
                     .append(qquuid.toString()).append(ln);
 
             // Write file size
@@ -94,7 +94,6 @@ public class PostRequest extends BasicRequest<InputStream> {
             bldr.append(boundary).append(ln).append("Content-Disposition: form-data; name=file; filename=\"" + filename
                     + "\"" + ln + "Content-Type:application/x-object" + ln + ln);
 
-            System.out.println(bldr.toString());
             String res = bldr.toString();
             writer.write(res.getBytes(StandardCharsets.UTF_8));
             Files.copy(p, writer);
