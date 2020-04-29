@@ -50,15 +50,21 @@ public class ResumeExporter {
         try {
             HttpResponse<InputStream> result = pr.sendRequest("expires", "2w");
             String response = new String(result.body().readAllBytes(), StandardCharsets.UTF_8);
-            if (HttpStatus.resolve(result.statusCode()).is2xxSuccessful()) {
+            boolean success;
+            if (Objects.requireNonNull(HttpStatus.resolve(result.statusCode())).is2xxSuccessful()) {
                 LOG.info("Response: " + response);
+                success = true;
             } else {
                 LOG.warning("Failed request: " + response);
+                success = false;
             }
 
-            return response;
+            String updatedResponse = "{\"success\":" + success + ",\"link\":\"" + response.replace("transfer.sh/", "transfer.sh/download/") + "\",\"expiry\":\"14 days\"}";
+            LOG.info("Updated response: " + updatedResponse);
+
+            return updatedResponse;
         } catch (HttpTimeoutException ex) {
-            LOG.warning("Upload to file.io timed out");
+            LOG.warning("Upload to transfer.sh timed out");
             throw new TimeoutException();
         }
 
