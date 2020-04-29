@@ -40,7 +40,7 @@ public class ResumeExporter {
         String name = pdf.toString().split("\\.pdf")[0];
 
         // Create the command
-        ProcessBuilder builder = new ProcessBuilder("curl", "-v", "-F", "\"file=@" + pdf.toAbsolutePath().toString() + "\"", "https://file.io");
+        ProcessBuilder builder = new ProcessBuilder("sudo curl", "-v", "-F", "\"file=@" + pdf.toAbsolutePath().toString() + "\"", "https://file.io");
         builder.directory(pdf.getParent().toFile());
         LOG.info("Attempting to run command " + builder.command());
 
