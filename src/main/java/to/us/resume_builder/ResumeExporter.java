@@ -48,7 +48,7 @@ public class ResumeExporter {
         LOG.info("Attempting to post");
 
         try {
-            HttpResponse<InputStream> result = pr.sendRequest();//"expires", "2w");
+            HttpResponse<InputStream> result = pr.sendRequest("expires", "2w");
             String response = new String(result.body().readAllBytes(), StandardCharsets.UTF_8);
             boolean success;
             if (Objects.requireNonNull(HttpStatus.resolve(result.statusCode())).is2xxSuccessful()) {
@@ -59,10 +59,11 @@ public class ResumeExporter {
                 success = false;
             }
 
-            String updatedResponse = "{\"success\":" + success + ",\"link\":\"" + response.replace("transfer.sh/", "transfer.sh/download/") + "\",\"expiry\":\"14 days\"}";
-            LOG.info("Updated response: " + updatedResponse);
+//            String updatedResponse = "{\"success\":" + success + ",\"link\":\"" + response.replace("transfer.sh/", "transfer.sh/download/") + "\",\"expiry\":\"14 days\"}";
+//            LOG.info("Updated response: " + updatedResponse);
 
-            return updatedResponse;
+//            return updatedResponse;
+            return response;
         } catch (HttpTimeoutException ex) {
             LOG.warning("Upload to transfer.sh timed out");
             throw new TimeoutException();
