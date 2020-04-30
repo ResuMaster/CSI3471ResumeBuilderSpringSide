@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 import org.springframework.http.HttpStatus;
 
-import to.us.resume_builder.dbc.request.PostRequest;
+import to.us.resume_builder.request.PostRequest;
 
 /**
  * Contains utility functions for exporting resume to PDF and uploading to

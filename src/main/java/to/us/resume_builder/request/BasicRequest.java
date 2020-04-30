@@ -1,4 +1,4 @@
-package to.us.resume_builder.dbc.request;
+package to.us.resume_builder.request;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;

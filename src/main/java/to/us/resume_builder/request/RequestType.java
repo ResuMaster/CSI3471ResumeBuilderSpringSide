@@ -1,4 +1,4 @@
-package to.us.resume_builder.dbc.request;
+package to.us.resume_builder.request;
 
 public enum RequestType {
     GET, SET, PUT, POST, DELETE
