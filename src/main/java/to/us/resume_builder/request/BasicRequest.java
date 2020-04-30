@@ -56,7 +56,9 @@ public abstract class BasicRequest<T> {
     /**
      * Create a request with a specified type
      * 
-     * @param type The type of request this request handles
+     * @param type         The type of request this request handles
+     * @param specificPath The path, built off of the class's hostname, that this
+     *                     request should go to.
      */
     public BasicRequest(RequestType type, String specificPath) {
         this.type = type;
@@ -66,7 +68,8 @@ public abstract class BasicRequest<T> {
     /**
      * Creates and sends the specific request this class handles.
      * 
-     * @param arguments
+     * @param arguments The arguments this request should include, in a (Name1,
+     *                  Val1, Name2, Val2... NameN, ValN) format.
      * @return The http response from the request this class handles
      * @throws InterruptedException If the operation is interrupted
      * @throws IOException          If an I/O exception occurs in sending or
