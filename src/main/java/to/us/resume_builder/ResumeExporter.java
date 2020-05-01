@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 
 import org.springframework.http.HttpStatus;
 
-import to.us.resume_builder.dbc.request.PostRequest;
+import to.us.resume_builder.request.PostRequest;
 
 /**
  * Contains utility functions for exporting resume to PDF and uploading to
@@ -75,6 +75,7 @@ public class ResumeExporter {
      * Export the resume to the specified file.
      *
      * @param exportLocation The name of the file to export to.
+     * @param latex          The LaTeX string to compile into a PDF
      *
      * @return Whether or not the export was successful.
      * @throws IOException Thrown if any errors occur during the export process.
