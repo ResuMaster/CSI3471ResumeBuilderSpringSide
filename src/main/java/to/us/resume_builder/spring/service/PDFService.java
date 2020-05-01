@@ -14,6 +14,7 @@ import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 
+import to.us.resume_builder.ApplicationConfiguration;
 import to.us.resume_builder.MiscUtils;
 import to.us.resume_builder.ResumeExporter;
 
@@ -22,6 +23,8 @@ public class PDFService {
     private Logger LOG = Logger.getLogger(PDFService.class.getName());
 
     public ResponseEntity<InputStreamResource> handleRequest(String latex, boolean url) {
+        final String UPLOAD_URL = ApplicationConfiguration.getInstance().getString("upload.url");
+
         Path pdf;
         do {
             pdf = Path.of("./", MiscUtils.randomAlphanumericString(16) + ".pdf");
@@ -39,7 +42,7 @@ public class PDFService {
             LOG.info("requesting url: " + url);
             if (url) {
                 // Upload PDF to file.io, return response
-                LOG.info("Uploading pdf to transfer.sh");
+                LOG.info("Uploading pdf to " + UPLOAD_URL);
                 String response = ResumeExporter.uploadPDF(pdf);
                 in = new ByteArrayInputStream(response.getBytes());
                 mediaType = MediaType.APPLICATION_JSON;
@@ -49,11 +52,11 @@ public class PDFService {
                 mediaType = MediaType.APPLICATION_PDF;
             }
         } catch (InterruptedException e) {
-            LOG.warning("transfer.sh upload failed - " + e.getMessage());
-            return FACTORY.createServiceUnavailable("file.io upload failed").build();
+            LOG.warning(UPLOAD_URL + " upload failed - " + e.getMessage());
+            return FACTORY.createServiceUnavailable(UPLOAD_URL + " upload failed").build();
         } catch (TimeoutException e) {
-            LOG.warning("transfer.sh upload timed out - " + e.getMessage());
-            return FACTORY.createRequestTimeout("file.io upload timed out").build();
+            LOG.warning(UPLOAD_URL + " upload timed out - " + e.getMessage());
+            return FACTORY.createRequestTimeout(UPLOAD_URL + " upload timed out").build();
         } catch (IOException e) {
             LOG.logp(Level.WARNING, getClass().getName(), "postPdf", "IOException", e);
             return FACTORY.createInternalServerError("internal file I/O error").build();

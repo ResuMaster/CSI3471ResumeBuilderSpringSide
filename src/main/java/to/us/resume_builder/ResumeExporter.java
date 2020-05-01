@@ -41,15 +41,17 @@ public class ResumeExporter {
      * @throws TimeoutException     The process took too long
      */
     public static String uploadPDF(Path pdf) throws IOException, InterruptedException, TimeoutException {
+        final String UPLOAD_URL = ApplicationConfiguration.getInstance().getString("upload.url");
+
         LOG.info("Does PDF exist? " + (Files.exists(Path.of(pdf.toAbsolutePath().toString())) ? "YES" : "NO"));
 
         // Create the command
         PostRequest pr = new PostRequest("/", pdf.toString());
-        LOG.info("Attempting to POST to " + ApplicationConfiguration.getInstance().getString("upload.url"));
+        LOG.info("Attempting to POST to " + UPLOAD_URL);
 
         try {
             HttpResponse<InputStream> result;
-            if (ApplicationConfiguration.getInstance().getString("upload.url").equals("file.io")) {
+            if (UPLOAD_URL.equals("file.io")) {
                 result = pr.sendRequest("expires", "2w");
             } else {
                 result = pr.sendRequest();
@@ -64,14 +66,14 @@ public class ResumeExporter {
                 success = false;
             }
 
-            if (ApplicationConfiguration.getInstance().getString("upload.url").equals("transfer.sh")) {
+            if (UPLOAD_URL.equals("transfer.sh")) {
                 response = "{\"success\":" + success + ",\"link\":\"" + response.replace("transfer.sh/", "transfer.sh/download/") + "\",\"expiry\":\"14 days\"}";
                 LOG.info("Updated response: " + response);
             }
 
             return response;
         } catch (HttpTimeoutException ex) {
-            LOG.warning("Upload to transfer.sh timed out");
+            LOG.warning("Upload to " + UPLOAD_URL + " timed out");
             throw new TimeoutException();
         }
 
