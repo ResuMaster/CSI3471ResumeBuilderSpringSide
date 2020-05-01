@@ -1,3 +1,7 @@
 {
-  "export.tempLocation": "./temp/"
+  "export.tempLocation": "./temp/",
+  "upload.url": "file.io",
+  "templates.directory": "./templates/",
+  "export.timeout": 60.0,
+  "upload.timeout": 60.0
 }

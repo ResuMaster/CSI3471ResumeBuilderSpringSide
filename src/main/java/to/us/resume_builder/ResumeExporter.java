@@ -45,10 +45,15 @@ public class ResumeExporter {
 
         // Create the command
         PostRequest pr = new PostRequest("/", pdf.toString());
-        LOG.info("Attempting to post");
+        LOG.info("Attempting to POST to " + ApplicationConfiguration.getInstance().getString("upload.url"));
 
         try {
-            HttpResponse<InputStream> result = pr.sendRequest();//"expires", "2w");
+            HttpResponse<InputStream> result;
+            if (ApplicationConfiguration.getInstance().getString("upload.url").equals("file.io")) {
+                result = pr.sendRequest("expires", "2w");
+            } else {
+                result = pr.sendRequest();
+            }
             String response = new String(result.body().readAllBytes(), StandardCharsets.UTF_8);
             boolean success;
             if (Objects.requireNonNull(HttpStatus.resolve(result.statusCode())).is2xxSuccessful()) {
@@ -59,11 +64,12 @@ public class ResumeExporter {
                 success = false;
             }
 
-            String updatedResponse = "{\"success\":" + success + ",\"link\":\"" + response.replace("transfer.sh/", "transfer.sh/download/") + "\",\"expiry\":\"14 days\"}";
-            LOG.info("Updated response: " + updatedResponse);
+            if (ApplicationConfiguration.getInstance().getString("upload.url").equals("transfer.sh")) {
+                response = "{\"success\":" + success + ",\"link\":\"" + response.replace("transfer.sh/", "transfer.sh/download/") + "\",\"expiry\":\"14 days\"}";
+                LOG.info("Updated response: " + response);
+            }
 
-            return updatedResponse;
-//            return response;
+            return response;
         } catch (HttpTimeoutException ex) {
             LOG.warning("Upload to transfer.sh timed out");
             throw new TimeoutException();
@@ -78,11 +84,12 @@ public class ResumeExporter {
      * @param latex          The LaTeX string to compile into a PDF
      *
      * @return Whether or not the export was successful.
-     * @throws IOException Thrown if any errors occur during the export process.
+     * @throws IOException Thrown if any errors occur during the export
+     *                     process.
      */
     public static boolean export(Path exportLocation, String latex) throws IOException {
         Path latexPath = Path.of(ApplicationConfiguration.getInstance().getString("export.tempLocation"),
-                MiscUtils.randomAlphanumericString(16) + ".tex");
+            MiscUtils.randomAlphanumericString(16) + ".tex");
         if (!Files.exists(latexPath.getParent())) {
             // Generate the temp folder
             Files.createDirectory(latexPath.getParent());
@@ -123,7 +130,7 @@ public class ResumeExporter {
         LOG.info("Beginning resume compilation...");
         // Temporary artifacts
         final String[] ARTIFACTS_TO_DELETE = {
-                "aux", "log", "tex", "log"
+            "aux", "log", "tex", "log"
         };
         boolean status = true;
 

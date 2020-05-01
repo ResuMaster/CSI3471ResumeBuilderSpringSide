@@ -35,7 +35,7 @@ public class PostRequest extends BasicRequest<InputStream> {
     }
 
     @Override
-    protected URI getURI(String... arguments) {
+    public URI getURI(String... arguments) {
         String s = SITE + path + PARAM_SPLIT + getArguments(arguments);
         return URI.create(s);
     }
