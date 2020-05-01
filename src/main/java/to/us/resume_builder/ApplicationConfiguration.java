@@ -62,7 +62,7 @@ public class ApplicationConfiguration {
         setIfNotPresent("templates.directory", "./templates/");
         setIfNotPresent("export.tempLocation", "./temp/");
         setIfNotPresent("export.timeout", 60L);
-        setIfNotPresent("export.fileio", "https://transfer.sh");
+        setIfNotPresent("upload.url", "https://transfer.sh");
     }
 
     /**

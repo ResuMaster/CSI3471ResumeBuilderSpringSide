@@ -32,7 +32,7 @@ public abstract class BasicRequest<T> {
     /** Initializes the client and address to query. */
     static {
         CLIENT = HttpClient.newBuilder().version(HttpClient.Version.HTTP_2).build();
-        SITE = "https://transfer.sh";
+        SITE = ApplicationConfiguration.getInstance().getString("upload.url");
     }
 
     /** Charset to send requests using */
