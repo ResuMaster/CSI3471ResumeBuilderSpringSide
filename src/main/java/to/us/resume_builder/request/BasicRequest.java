@@ -32,7 +32,7 @@ public abstract class BasicRequest<T> {
     /** Initializes the client and address to query. */
     static {
         CLIENT = HttpClient.newBuilder().version(HttpClient.Version.HTTP_2).build();
-        SITE = ApplicationConfiguration.getInstance().getString("export.fileio");
+        SITE = "https://" + ApplicationConfiguration.getInstance().getString("upload.url");
     }
 
     /** Charset to send requests using */
@@ -45,7 +45,7 @@ public abstract class BasicRequest<T> {
     protected static final String PARAM_SPLIT = "?";
 
     /** Assumed timeout, in seconds, of the method */
-    protected static final int TIMEOUT = 5;
+    protected static final int TIMEOUT = ApplicationConfiguration.getInstance().getLong("upload.timeout").intValue();
 
     /** The type of request this handles */
     private RequestType type;

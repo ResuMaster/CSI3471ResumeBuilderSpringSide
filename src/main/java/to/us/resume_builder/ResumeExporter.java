@@ -41,24 +41,39 @@ public class ResumeExporter {
      * @throws TimeoutException     The process took too long
      */
     public static String uploadPDF(Path pdf) throws IOException, InterruptedException, TimeoutException {
+        final String UPLOAD_URL = ApplicationConfiguration.getInstance().getString("upload.url");
+
         LOG.info("Does PDF exist? " + (Files.exists(Path.of(pdf.toAbsolutePath().toString())) ? "YES" : "NO"));
 
         // Create the command
         PostRequest pr = new PostRequest("/", pdf.toString());
-        LOG.info("Attempting to post");
+        LOG.info("Attempting to POST to " + UPLOAD_URL);
 
         try {
-            HttpResponse<InputStream> result = pr.sendRequest("expires", "2w");
+            HttpResponse<InputStream> result;
+            if (UPLOAD_URL.equals("file.io")) {
+                result = pr.sendRequest("expires", "2w");
+            } else {
+                result = pr.sendRequest();
+            }
             String response = new String(result.body().readAllBytes(), StandardCharsets.UTF_8);
-            if (HttpStatus.resolve(result.statusCode()).is2xxSuccessful()) {
+            boolean success;
+            if (Objects.requireNonNull(HttpStatus.resolve(result.statusCode())).is2xxSuccessful()) {
                 LOG.info("Response: " + response);
+                success = true;
             } else {
                 LOG.warning("Failed request: " + response);
+                success = false;
+            }
+
+            if (UPLOAD_URL.equals("transfer.sh")) {
+                response = "{\"success\":" + success + ",\"link\":\"" + response.replace("transfer.sh/", "transfer.sh/download/") + "\",\"expiry\":\"14 days\"}";
+                LOG.info("Updated response: " + response);
             }
 
             return response;
         } catch (HttpTimeoutException ex) {
-            LOG.warning("Upload to file.io timed out");
+            LOG.warning("Upload to " + UPLOAD_URL + " timed out");
             throw new TimeoutException();
         }
 
@@ -71,11 +86,12 @@ public class ResumeExporter {
      * @param latex          The LaTeX string to compile into a PDF
      *
      * @return Whether or not the export was successful.
-     * @throws IOException Thrown if any errors occur during the export process.
+     * @throws IOException Thrown if any errors occur during the export
+     *                     process.
      */
     public static boolean export(Path exportLocation, String latex) throws IOException {
         Path latexPath = Path.of(ApplicationConfiguration.getInstance().getString("export.tempLocation"),
-                MiscUtils.randomAlphanumericString(16) + ".tex");
+            MiscUtils.randomAlphanumericString(16) + ".tex");
         if (!Files.exists(latexPath.getParent())) {
             // Generate the temp folder
             Files.createDirectory(latexPath.getParent());
@@ -116,7 +132,7 @@ public class ResumeExporter {
         LOG.info("Beginning resume compilation...");
         // Temporary artifacts
         final String[] ARTIFACTS_TO_DELETE = {
-                "aux", "log", "tex", "log"
+            "aux", "log", "tex", "log"
         };
         boolean status = true;
 
